@@ -35,8 +35,10 @@ uint16_t fetch(Emulator *state);
 
 void clear_display(Emulator *state);
 void jump(Emulator *state, uint16_t address);
-void set_register(Emulator *state, uint8_t register_id, uint16_t data);
-void add_register(Emulator *state, uint8_t register_id, uint16_t data);
+void set_register(Emulator *state, int register_id, uint16_t data);
+void add_register(Emulator *state, int register_id, uint16_t data);
 void set_index(Emulator *state, uint16_t address);
+void display(Emulator *state, int x_register_id, int y_register_id, 
+             int height);
 
 #endif

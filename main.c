@@ -28,31 +28,34 @@ int main(int argc, char *argv[]) {
         .sp = 0,
         .I = 0
     };
-
+    
     load_font(&state);
     load_rom(&state, argv[1]);
-    for (int i = 0; i < MEMORY_MAX; ++i) {
-        if (state.memory[i])
-            printf("%04d: %02x\n", i, state.memory[i]);
-    }
-
-    /*
+    
     SDL_Window* sdl_window = NULL;
     SDL_Renderer* sdl_renderer = NULL;
-    if(!sdl_init_window(&sdl_window, &sdl_renderer))
+    if(!sdl_init_window(&sdl_window, &sdl_renderer)) {
         return 0;
-
-    SDL_Event e;
-    bool quit = false; 
-    while (quit == false) { 
-        while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) 
-                quit = true;
-        }
     }
 
+    SDL_Event e;
+    bool sdl_quit = false;
+    
+    uint16_t instruction; 
+    do { 
+        instruction = fetch(&state);
+        decode(&state, instruction);
+
+        if (OP(instruction) == 0xD)
+            sdl_draw_buffer(&sdl_renderer, state.display);
+
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) 
+                sdl_quit = true;
+        }
+    } while (instruction && !sdl_quit);
+
     sdl_free_window(&sdl_window, &sdl_renderer);
-    */
 
     return 0;
 }

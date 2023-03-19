@@ -21,6 +21,8 @@ bool decode(Emulator *state, uint16_t instruction) {
             set_index(state, NNN(instruction));
             break;
         case 0xD: 
+            display(state, X(instruction), Y(instruction), N(instruction));
+            break;
         default:
             return false;
     } 
