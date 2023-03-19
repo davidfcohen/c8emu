@@ -1,37 +1,42 @@
 #ifndef EMULATOR_H
 #define EMULATOR_H
 
-#define MEMORY_MAX 4096
-#define STACK_MAX 16
-#define PC_START 512
-
-#define FONT_START 0x50
+#include <stdbool.h>
+#include <stdint.h>
 
 #define DISPLAY_HEIGHT 32
 #define DISPLAY_WIDTH 64
 
-struct chip_8 {
-    uint8_t memory[MEMORY_MAX];
-    bool display[DISPLAY_HEIGHT][DISPLAY_WIDTH];
-    int stack[STACK_MAX];
+#define MEMORY_MAX 4096
+#define STACK_MAX 16
+#define REGISTER_MAX 16
 
+#define PC_START 512
+
+typedef struct {
+    uint16_t V[REGISTER_MAX];
+    uint16_t stack[STACK_MAX];
+    uint8_t memory[MEMORY_MAX];
+    
+    bool display[DISPLAY_HEIGHT][DISPLAY_WIDTH];
+
+    uint16_t pc;
+    uint16_t I;
+
+    uint8_t sp;
     uint8_t sound_timer;
     uint8_t delay_timer;
+} Emulator;
 
-    int pc;
-    int sp;
-};
+int load_font(Emulator *state);
+int load_rom(Emulator *state, const char *filename);
 
-void init(struct chip_8 *state, const char *filename);
-void fetch(struct chip_8 *state);
-void decode(struct chip_8 *state);
-void execute(struct chip_8 *state);
+uint16_t fetch(Emulator *state);
 
-int load_rom(struct chip_8 *state, const char *filename);
-
-void display_clear(struct chip_8 *state);
-
-bool stack_push(struct chip_8 *state, int address);
-int stack_pop(struct chip_8 *state);
+void clear_display(Emulator *state);
+void jump(Emulator *state, uint16_t address);
+void set_register(Emulator *state, uint8_t register_id, uint16_t data);
+void add_register(Emulator *state, uint8_t register_id, uint16_t data);
+void set_index(Emulator *state, uint16_t address);
 
 #endif

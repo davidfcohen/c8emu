@@ -1,11 +1,11 @@
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
-#include <inttypes.h>
 
 #include "emulator.h"
 
-void init(struct chip_8 *state, const char *filename) {
-    uint8_t font_data[] = {
+int load_font(Emulator *state) {
+    uint8_t font[] = {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
         0x20, 0x60, 0x20, 0x20, 0x70, // 1
         0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -23,65 +23,65 @@ void init(struct chip_8 *state, const char *filename) {
         0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
         0xF0, 0x80, 0xF0, 0x80, 0x80  // F
     };
-
-    int font_data_size = sizeof(font_data) / sizeof(font_data[0]);
-    for (int p = FONT_START; 
-         p < FONT_START + font_data_size && p < PC_START; 
-         p++) {
-        state->memory[p] = font_data[p - FONT_START];
+    
+    int font_size = sizeof(font) / sizeof(font[0]);
+    
+    int i;
+    for (i = 0; i < font_size && i < PC_START; ++i) {
+        state->memory[i] = font[i];
     }
 
-    load_rom(state, filename);
+    return i;
 }
 
-void fetch(struct chip_8 *state) {
-    return;
-}
-
-void decode(struct chip_8 *state) {
-    return;
-}
-
-void execute(struct chip_8 *state) {
-    return;
-}
-
-int load_rom(struct chip_8 *state, const char *filename) {
+int load_rom(Emulator *state, const char *filename) {
     FILE *rom = fopen(filename, "r");
 
     if (rom == NULL)
         return -1;
 
-    int n_read = fread(state->memory + PC_START,
-                       sizeof(uint8_t),
-                       MEMORY_MAX - PC_START,
-                       rom);
+    int n = fread(state->memory + PC_START, 1, MEMORY_MAX - PC_START, rom);
 
     fclose(rom);
-    return n_read;
+    return n;
 }
 
-void display_clear(struct chip_8 *state) {
+uint16_t fetch(Emulator *state) {    
+    uint16_t instruction;
+
+    instruction = state->memory[state->pc] << 8;
+    instruction += state->memory[state->pc + 1];
+
+    if (state->pc < MEMORY_MAX - 2)
+        state->pc += 2;
+
+    return instruction;
+}
+
+void clear_display(Emulator *state) {
     for (int y = 0; y < DISPLAY_HEIGHT; ++y)
         for (int x = 0; x < DISPLAY_WIDTH; ++x)
             state->display[y][x] = 0;
 }
 
-bool stack_push(struct chip_8 *state, int address) {
-    if (state->sp >= STACK_MAX) {
-        printf("CHIP-8: Stack Overflow\n");
-        return false;
-    }
-
-    state->stack[state->sp++] = address;
-    return true;
+void jump(Emulator *state, uint16_t address) {
+    if (address >= MEMORY_MAX)
+        return;
+    state->pc = address;
 }
 
-int stack_pop(struct chip_8 *state) {
-    if (state->sp <= 0) {
-        printf("CHIP-8: Stack Empty\n");
-        return -1;
-    }
-    
-    return state->stack[--state->sp];
+void set_register(Emulator *state, uint8_t register_id, uint16_t data) {
+    if (register_id >= REGISTER_MAX)
+        return;
+    state->V[register_id] = data;
+}
+
+void add_register(Emulator *state, uint8_t register_id, uint16_t data) {
+    if (register_id >= REGISTER_MAX)
+        return;
+    state->V[register_id] += data;
+}
+
+void set_index(Emulator *state, uint16_t address) {
+    state->I = address;
 }
