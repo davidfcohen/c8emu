@@ -8,8 +8,10 @@
 
 bool sdl_init_window(SDL_Window **sdl_window, SDL_Renderer **sdl_renderer);
 void sdl_free_window(SDL_Window **sdl_window, SDL_Renderer **sdl_renderer);
-void sdl_draw_buffer(SDL_Renderer **sdl_renderer,
+void sdl_draw_buffer(SDL_Renderer *sdl_renderer,
                      bool buffer[DISPLAY_HEIGHT][DISPLAY_WIDTH]);
+void sdl_scale_renderer_to_window(SDL_Window *sdl_window, 
+                                  SDL_Renderer *sdl_renderer);
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -40,6 +42,7 @@ int main(int argc, char *argv[]) {
 
     SDL_Event e;
     bool sdl_quit = false;
+    bool sdl_window_resized;
     
     uint16_t instruction; 
     do { 
@@ -47,12 +50,20 @@ int main(int argc, char *argv[]) {
         decode(&state, instruction);
 
         if (OP(instruction) == 0xD)
-            sdl_draw_buffer(&sdl_renderer, state.display);
+            sdl_draw_buffer(sdl_renderer, state.display);
 
         while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) 
+            if (e.type == SDL_QUIT)
                 sdl_quit = true;
+            
+            sdl_window_resized = (e.type == SDL_WINDOWEVENT &&
+                                  e.window.event == SDL_WINDOWEVENT_RESIZED);
+            if (sdl_window_resized) {
+                sdl_scale_renderer_to_window(sdl_window, sdl_renderer);
+                sdl_draw_buffer(sdl_renderer, state.display);
+            }
         }
+
     } while (instruction && !sdl_quit);
 
     sdl_free_window(&sdl_window, &sdl_renderer);
@@ -71,11 +82,15 @@ bool sdl_init_window(SDL_Window **sdl_window, SDL_Renderer **sdl_renderer) {
                                              SDL_WINDOW_SHOWN,
                                              sdl_window, 
                                              sdl_renderer);
+
     if (status < 0) {
         printf("Failed to initialize window and renderer!\n%s", 
                SDL_GetError());
         return false;
     };
+
+    SDL_SetWindowResizable(*sdl_window, SDL_TRUE);
+    SDL_SetWindowMinimumSize(*sdl_window, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
     return true;
 }
@@ -86,17 +101,27 @@ void sdl_free_window(SDL_Window **sdl_window, SDL_Renderer **sdl_renderer) {
     SDL_Quit();
 }
 
-void sdl_draw_buffer(SDL_Renderer **sdl_renderer, 
+void sdl_draw_buffer(SDL_Renderer *sdl_renderer, 
                      bool buffer[DISPLAY_HEIGHT][DISPLAY_WIDTH]) {
     for (int y = 0; y < DISPLAY_HEIGHT; ++y) {
         for (int x = 0; x < DISPLAY_WIDTH; ++x) {
             if (buffer[y][x])
-                SDL_SetRenderDrawColor(*sdl_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+                SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
             else
-                SDL_SetRenderDrawColor(*sdl_renderer, 0x00, 0x00, 0x00, 0x00);
-            SDL_RenderDrawPoint(*sdl_renderer, x, y);
+                SDL_SetRenderDrawColor(sdl_renderer, 0x00, 0x00, 0x00, 0x00);
+            SDL_RenderDrawPoint(sdl_renderer, x, y);
         }
     }
 
-    SDL_RenderPresent(*sdl_renderer);
+    SDL_RenderPresent(sdl_renderer);
+}
+
+void sdl_scale_renderer_to_window(SDL_Window *sdl_window, 
+                                  SDL_Renderer *sdl_renderer) {
+    int window_width, window_height;
+    SDL_GetWindowSize(sdl_window, &window_width, &window_height);
+
+    SDL_RenderSetScale(sdl_renderer, 
+                       (float) window_width /  DISPLAY_WIDTH,
+                       (float) window_height / DISPLAY_HEIGHT);
 }
