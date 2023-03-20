@@ -61,6 +61,7 @@ int main(int argc, char *argv[]) {
             if (sdl_window_resized) {
                 sdl_scale_renderer_to_window(sdl_window, sdl_renderer);
                 sdl_draw_buffer(sdl_renderer, state.display);
+                sdl_window_resized = false;
             }
         }
 
