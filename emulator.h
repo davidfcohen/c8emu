@@ -48,6 +48,7 @@ void add_register(Emulator *state, int register_id, uint16_t data);
 void set_index(Emulator *state, uint16_t address);
 void display(Emulator *state, int x_register_id, int y_register_id, 
              int height);
+             
 bool stack_push(Emulator *state, uint16_t address);
 bool stack_pop(Emulator *state, uint16_t *address);
 
