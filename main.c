@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
+
 #include <SDL2/SDL.h>
 
 #include "decode.h"
@@ -31,6 +33,11 @@ int main(int argc, char *argv[]) {
         .I = 0
     };
     
+    struct timespec sleep_timespec = {
+        .tv_sec = 0,
+        .tv_nsec = SLEEP_TIME_NS(FREQUENCY)
+    };
+
     load_font(&state);
     load_rom(&state, argv[1]);
     
@@ -44,13 +51,16 @@ int main(int argc, char *argv[]) {
     bool sdl_quit = false;
     bool sdl_window_resized;
     
-    uint16_t instruction; 
+    uint16_t instruction;
+
     do { 
         instruction = fetch(&state);
         decode(&state, instruction);
 
         if (OP(instruction) == 0xD)
             sdl_draw_buffer(sdl_renderer, state.display);
+
+        nanosleep(&sleep_timespec, NULL);
 
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT)

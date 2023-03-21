@@ -70,6 +70,29 @@ void jump(Emulator *state, uint16_t address) {
     state->pc = address;
 }
 
+void subroutine_call(Emulator *state, uint16_t address) {
+    if (address >= MEMORY_MAX || !stack_push(state, state->pc))
+        return;
+    state->pc = address;
+}
+
+void subroutine_return(Emulator *state) {
+    uint16_t address = 0;
+    if (!stack_pop(state, &address))
+        return;
+    state->pc = address;
+}
+
+void skip_if_equal(Emulator *state, uint16_t a, uint16_t b) {
+    if (a == b)
+        state->pc += 2;
+}
+
+void skip_if_not_equal(Emulator *state, uint16_t a, uint16_t b)     {
+    if (a != b)
+        state->pc += 2;
+}
+
 void set_register(Emulator *state, int register_id, uint16_t data) {
     if (register_id >= REGISTER_MAX)
         return;
@@ -133,4 +156,20 @@ void display(Emulator *state, int x_register_id, int y_register_id,
     }
 
     return;
+}
+
+bool stack_push(Emulator *state, uint16_t address) {
+    if (state->sp >= STACK_MAX - 1)
+        return false;
+    
+    state->stack[state->sp++] = address;
+    return true;
+}
+
+bool stack_pop(Emulator *state, uint16_t *address) {
+    if (state->sp == 0)
+        return false;
+        
+    *address = state->stack[--state->sp];
+    return true;
 }
