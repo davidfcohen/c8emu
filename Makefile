@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS = -Wall -Wextra -std=c17
+CFLAGS = -Wall -Wextra -Wpedantic -std=c17
 PKGCONFIG = $(shell which pkg-config)
 INCLUDES = $(shell $(PKGCONFIG) --cflags sdl2) 
 LIBS = $(shell $(PKGCONFIG) --libs sdl2)
