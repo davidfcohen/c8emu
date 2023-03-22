@@ -6,87 +6,87 @@
 #include "instructions.h"
 
 bool decode(Emulator *state, uint16_t instruction) {
-    uint16_t operation = instruction & 0xF00F;
-    
-    switch (operation) {
-    case 0x0000:
+    int first_nibble = (instruction >> 12) & 0xF;
+    int last_nibble = instruction & 0xF;
+
+    if (first_nibble == 0x0 && last_nibble == 0x0) {
         clear_display(state);
-        break;
-    case 0x000E:
+
+    } else if (first_nibble == 0x0 && last_nibble == 0xE) {
         subroutine_return(state);
-        break;
-    case 0x1000 ... 0x100F:
+
+    } else if (first_nibble == 0x1) {
         jump(state, NNN(instruction));
-        break;
-    case 0x2000 ... 0x200F:
+
+    } else if (first_nibble == 0x2) {
         subroutine_call(state, NNN(instruction));
-        break;
-    case 0x3000 ... 0x300F:
+
+    } else if (first_nibble == 0x3) {
         skip_if_equal(state, state->V[X(instruction)], NN(instruction));
-        break;
-    case 0x4000 ... 0x400F:
+
+    } else if (first_nibble == 0x4) {
         skip_if_not_equal(state,
                           state->V[X(instruction)], 
                           NN(instruction));
-        break;
-    case 0x5000 ... 0x500F:
+
+    } else if (first_nibble == 0x5) {
         skip_if_equal(state,
                       state->V[X(instruction)],
                       state->V[Y(instruction)]);
-        break;
-    case 0x6000 ... 0x600F:
+
+    } else if (first_nibble == 0x6) {
         set_register(state, X(instruction), NN(instruction));
-        break;
-    case 0x7000 ... 0x700F:
+
+    } else if (first_nibble == 0x7) {
         add_register(state, X(instruction), NN(instruction));
-        break;
-    case 0x8000:
+
+    } else if (first_nibble == 0x8 && last_nibble == 0x0) {
         set_register(state, 
                      X(instruction), 
                      state->V[Y(instruction)]);
-        break;
-    case 0x8001:
+
+    } else if (first_nibble == 0x8 && last_nibble == 0x1) {
         state->V[X(instruction)] |= state->V[Y(instruction)];
-        break;
-    case 0x8002:
+
+    } else if (first_nibble == 0x8 && last_nibble == 0x2) {
         state->V[X(instruction)] &= state->V[Y(instruction)];
-        break;
-    case 0x8003:
+
+    } else if (first_nibble == 0x8 && last_nibble == 0x3) {
         state->V[X(instruction)] ^= state->V[Y(instruction)];
-        break;
-    case 0x8004:
+
+    } else if (first_nibble == 0x8 && last_nibble == 0x4) {
         add_register_carry(state, X(instruction), Y(instruction));
-        break;
-    case 0x8005:
+
+    } else if (first_nibble == 0x8 && last_nibble == 0x5) {
         sub_register(state, X(instruction), Y(instruction));
-        break;
-    case 0x8006:
+
+    } else if (first_nibble == 0x8 && last_nibble == 0x6) {
         shift_right(state, X(instruction), Y(instruction));
-        break;
-    case 0x8007:
+
+    } else if (first_nibble == 0x8 && last_nibble == 0x7) {
         sub_register(state, Y(instruction), X(instruction));
-        break;
-    case 0x800E:
+
+    } else if (first_nibble == 0x8 && last_nibble == 0xE) {
         shift_left(state, X(instruction), Y(instruction));
-        break;
-    case 0x9000 ... 0x900F:
+    
+    } else if (first_nibble == 0x9) {
         skip_if_not_equal(state, 
                           state->V[X(instruction)], 
                           state->V[Y(instruction)]);
-        break;
-    case 0xA000 ... 0xA00F:
+       
+    } else if (first_nibble == 0xA) {
         set_index(state, NNN(instruction));
-        break;
-    case 0xB000 ... 0xB00F:
+    
+    } else if (first_nibble == 0xB) {
         jump_with_offset(state, NNN(instruction));
-        break;
-    case 0xC000 ... 0xC00F: 
+    
+    } else if (first_nibble == 0xC) {
         random(state, X(instruction), NN(instruction));
-        break;
-    case 0xD000 ... 0xD00F:
+    
+    } else if (first_nibble == 0xD) {
         display(state, X(instruction), Y(instruction), N(instruction));
-        break;
-    default:
+    
+    } else {
         return false;
     }
 
