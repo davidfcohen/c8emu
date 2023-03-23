@@ -58,7 +58,7 @@ uint16_t fetch(Emulator *state) {
     return instruction;
 }
 
-bool stack_push(Emulator *state, uint16_t address) {
+bool stack_push(Emulator *state, int address) {
     if (state->sp >= STACK_MAX - 1)
         return false;
     
@@ -66,7 +66,7 @@ bool stack_push(Emulator *state, uint16_t address) {
     return true;
 }
 
-bool stack_pop(Emulator *state, uint16_t *address) {
+bool stack_pop(Emulator *state, int *address) {
     if (state->sp == 0)
         return false;
         

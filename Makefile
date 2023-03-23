@@ -4,7 +4,7 @@ PKGCONFIG = $(shell which pkg-config)
 INCLUDES = $(shell $(PKGCONFIG) --cflags sdl2) 
 LIBS = $(shell $(PKGCONFIG) --libs sdl2)
 
-SRC = main.c sdl_wrapper.c emulator.c decode.c instructions.c
+SRC = main.c sdl_wrapper.c emulator.c decode.c operations.c
 
 all: main
 

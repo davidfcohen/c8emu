@@ -18,18 +18,18 @@
 #define FREQUENCY 700
 
 typedef struct emulator {
-    uint16_t stack[STACK_MAX];
+    int stack[STACK_MAX];
     uint8_t V[REGISTER_MAX];
     uint8_t memory[MEMORY_MAX];
     
     bool display[DISPLAY_HEIGHT][DISPLAY_WIDTH];
 
-    uint16_t pc;
-    uint16_t I;
+    int pc;
+    int I;
 
-    uint8_t sp;
-    uint8_t sound_timer;
-    uint8_t delay_timer;
+    int sp;
+    int sound_timer;
+    int delay_timer;
 } Emulator;
 
 int load_font(Emulator *state);
@@ -37,7 +37,7 @@ int load_rom(Emulator *state, const char *filename);
 
 uint16_t fetch(Emulator *state);
 
-bool stack_push(Emulator *state, uint16_t address);
-bool stack_pop(Emulator *state, uint16_t *address);
+bool stack_push(Emulator *state, int address);
+bool stack_pop(Emulator *state, int *address);
 
 #endif
