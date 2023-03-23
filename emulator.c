@@ -58,79 +58,18 @@ uint16_t fetch(Emulator *state) {
     return instruction;
 }
 
-void clear_display(Emulator *state) {
-    for (int y = 0; y < DISPLAY_HEIGHT; ++y)
-        for (int x = 0; x < DISPLAY_WIDTH; ++x)
-            state->display[y][x] = 0;
-}
-
-void jump(Emulator *state, uint16_t address) {
-    if (address >= MEMORY_MAX)
-        return;
-    state->pc = address;
-}
-
-void set_register(Emulator *state, int register_id, uint16_t data) {
-    if (register_id >= REGISTER_MAX)
-        return;
-    state->V[register_id] = data;
-}
-
-void add_register(Emulator *state, int register_id, uint16_t data) {
-    if (register_id >= REGISTER_MAX)
-        return;
-    state->V[register_id] += data;
-}
-
-void set_index(Emulator *state, uint16_t address) {
-    if (address >= MEMORY_MAX)
-        return;
-    state->I = address;
-}
-
-void display(Emulator *state, int x_register_id, int y_register_id,
-             int height) {
+bool stack_push(Emulator *state, int address) {
+    if (state->sp <= 0)
+        return false;
     
-    if (x_register_id >= REGISTER_MAX || y_register_id >= REGISTER_MAX)
-        return;
-    
-    int x_init = state->V[x_register_id] % DISPLAY_WIDTH;
-    int y = state->V[y_register_id] % DISPLAY_HEIGHT;
+    state->stack[--state->sp] = address;
+    return true;
+}
 
-    state->V[0xF] = 0;
-
-    uint16_t sprite_row_address;
-    uint8_t sprite_row;
-
-    bool sprite_pixel_is_on;
-    bool display_pixel_is_on;
-
-    int x;
-    for (int row = 0; row < height; ++row) {
-        sprite_row_address = state->I + row;
-        sprite_row = state->memory[sprite_row_address];
-
-        x = x_init;
-        for (int pixel = 8; pixel > 0; --pixel) {
-            sprite_pixel_is_on = (sprite_row >> (pixel - 1)) & 1;
-            display_pixel_is_on = state->display[y][x];
-            
-            if (sprite_pixel_is_on && display_pixel_is_on) {
-                state->display[y][x] = 0;
-                state->V[0xF] = 1;
-            } else if (sprite_pixel_is_on && !display_pixel_is_on) {
-                state->display[y][x] = 1;
-            }
-
-            if (++x == DISPLAY_WIDTH) {
-                break;
-            }
-        }
-
-        if (++y == DISPLAY_HEIGHT) {
-            break;
-        }
-    }
-
-    return;
+bool stack_pop(Emulator *state, int *address) {
+    if (state->sp >= STACK_MAX)
+        return false;
+        
+    *address = state->stack[state->sp++];
+    return true;
 }
