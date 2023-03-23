@@ -15,13 +15,16 @@
 
 #define PC_START 512
 
-#define FREQUENCY 700
+#define FREQUENCY_CPU 700
+#define FREQUENCY_TIMER 60
 
 typedef struct emulator {
     int stack[STACK_MAX];
+    
     uint8_t V[REGISTER_MAX];
     uint8_t memory[MEMORY_MAX];
     
+    bool keys[16];
     bool display[DISPLAY_HEIGHT][DISPLAY_WIDTH];
 
     int pc;

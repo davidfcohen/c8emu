@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 
 #include "emulator.h"
+#include "sdl_wrapper.h"
 
 bool sdl_init_window(SDL_Window **sdl_window, SDL_Renderer **sdl_renderer) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)

@@ -59,17 +59,17 @@ uint16_t fetch(Emulator *state) {
 }
 
 bool stack_push(Emulator *state, int address) {
-    if (state->sp >= STACK_MAX - 1)
+    if (state->sp <= 0)
         return false;
     
-    state->stack[state->sp++] = address;
+    state->stack[--state->sp] = address;
     return true;
 }
 
 bool stack_pop(Emulator *state, int *address) {
-    if (state->sp == 0)
+    if (state->sp >= STACK_MAX)
         return false;
         
-    *address = state->stack[--state->sp];
+    *address = state->stack[state->sp++];
     return true;
 }
