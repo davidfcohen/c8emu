@@ -9,6 +9,9 @@
 #include "emulator.h"
 #include "sdl_wrapper.h"
 
+void print_verbose_output(Emulator *state, uint16_t instruction);
+void print_decode_error(int decode_error);
+
 int main(int argc, char *argv[]) {
     Emulator state = {
         .stack = { 0 },
@@ -54,7 +57,7 @@ int main(int argc, char *argv[]) {
     bool sdl_quit = false;
     bool sdl_window_resized;
     
-    int decode_status;
+    int decode_error;
 
     uint16_t prev = 0;
     uint16_t instruction = 0;
@@ -73,56 +76,184 @@ int main(int argc, char *argv[]) {
             delay_count = 0;
         }
 
-        decode_status = decode(&state, instruction);
+        decode_error = decode(&state, instruction);
         if (verbose && instruction != prev) {
-            printf("INSTRUCTION=%04x PC=%04x I=%04x SP=%01x "
-                   "SOUND=%02x DELAY=%02x\n\t"
-                   "V0=%02x V1=%02x V2=%02x V3=%02x "
-                   "V4=%02x V5=%02x V6=%02x V7=%02x\n\t"
-                   "V8=%02x V9=%02x VA=%02x VB=%02x "
-                   "VC=%02x VD=%02x VE=%02x VF=%02x\n\n",
-                   instruction, state.pc, state.I, state.sp,
-                   state.sound_timer, state.delay_timer,
-                   state.V[0x0], state.V[0x1], state.V[0x2], state.V[0x3],
-                   state.V[0x4], state.V[0x5], state.V[0x6], state.V[0x7],
-                   state.V[0x8], state.V[0x9], state.V[0xA], state.V[0xB],
-                   state.V[0xC], state.V[0xD], state.V[0xE], state.V[0xF]);
+            print_verbose_output(&state, instruction);
         }
+        prev = instruction;
 
-        if (decode_status != DECODE_SUCCESS) {
-            switch(decode_status) {
-                case DECODE_BAD_INSTRUCTION:
-                    printf("ERROR: DECODE_BAD_INSTRUCTION\n");
-                    break;
-                default:
-                    printf("ERROR: UNKNOWN_ERROR\n");
-            }
+        if (decode_error) {
+            print_decode_error(decode_error);
             break;
         }
 
-        if (OP(instruction) == 0xD)
+        if (GET_OP(instruction) == 0xD)
             sdl_draw_buffer(sdl_renderer, state.display);
 
-        nanosleep(&sleep_timespec, NULL);
-
-        prev = instruction;
-
         while (SDL_PollEvent(&e)) {
+            sdl_window_resized = (e.type == SDL_WINDOWEVENT &&
+                                  e.window.event == SDL_WINDOWEVENT_RESIZED);
+            
             if (e.type == SDL_QUIT)
                 sdl_quit = true;
             
-            sdl_window_resized = (e.type == SDL_WINDOWEVENT &&
-                                  e.window.event == SDL_WINDOWEVENT_RESIZED);
-            if (sdl_window_resized) {
+            else if (e.type == SDL_KEYDOWN) {
+                switch(e.key.keysym.sym) {
+                case SDLK_1:
+                    state.keys[0x1] = true;
+                    break;
+                case SDLK_2:
+                    state.keys[0x2] = true;
+                    break;
+                case SDLK_3:
+                    state.keys[0x3] = true;
+                    break;
+                case SDLK_4:
+                    state.keys[0xC] = true;
+                    break;
+                case SDLK_q:
+                    state.keys[0x4] = true;
+                    break;
+                case SDLK_w:
+                    state.keys[0x5] = true;
+                    break;
+                case SDLK_e:
+                    state.keys[0x6] = true;
+                    break;
+                case SDLK_r:
+                    state.keys[0xD] = true;
+                    break;
+                case SDLK_a:
+                    state.keys[0x7] = true;
+                    break;
+                case SDLK_s:
+                    state.keys[0x8] = true;
+                    break;
+                case SDLK_d:
+                    state.keys[0x9] = true;
+                    break;
+                case SDLK_f:
+                    state.keys[0xE] = true;
+                    break;
+                case SDLK_z:
+                    state.keys[0xA] = true;
+                    break;
+                case SDLK_x:
+                    state.keys[0x0] = true;
+                    break;
+                case SDLK_c:
+                    state.keys[0xB] = true;
+                    break;
+                case SDLK_v:
+                    state.keys[0xF] = true;
+                    break;
+                default:
+                    break;
+                }
+            } else if (e.type == SDL_KEYUP) {
+                switch(e.key.keysym.sym) {
+                case SDLK_1:
+                    state.keys[0x1] = false;
+                    break;
+                case SDLK_2:
+                    state.keys[0x2] = false;
+                    break;
+                case SDLK_3:
+                    state.keys[0x3] = false;
+                    break;
+                case SDLK_4:
+                    state.keys[0xC] = false;
+                    break;
+                case SDLK_q:
+                    state.keys[0x4] = false;
+                    break;
+                case SDLK_w:
+                    state.keys[0x5] = false;
+                    break;
+                case SDLK_e:
+                    state.keys[0x6] = false;
+                    break;
+                case SDLK_r:
+                    state.keys[0xD] = false;
+                    break;
+                case SDLK_a:
+                    state.keys[0x7] = false;
+                    break;
+                case SDLK_s:
+                    state.keys[0x8] = false;
+                    break;
+                case SDLK_d:
+                    state.keys[0x9] = false;
+                    break;
+                case SDLK_f:
+                    state.keys[0xE] = false;
+                    break;
+                case SDLK_z:
+                    state.keys[0xA] = false;
+                    break;
+                case SDLK_x:
+                    state.keys[0x0] = false;
+                    break;
+                case SDLK_c:
+                    state.keys[0xB] = false;
+                    break;
+                case SDLK_v:
+                    state.keys[0xF] = false;
+                    break;
+                default:
+                    break;
+                }
+            } else if (sdl_window_resized) {
                 sdl_scale_renderer_to_window(sdl_window, sdl_renderer);
                 sdl_draw_buffer(sdl_renderer, state.display);
                 sdl_window_resized = false;
             }
         }
 
+        nanosleep(&sleep_timespec, NULL);
     } while (instruction && !sdl_quit);
 
     sdl_free_window(sdl_window, sdl_renderer);
 
     return 0;
+}
+
+void print_verbose_output(Emulator *state, uint16_t instruction) {
+    printf("INSTRUCTION=%04x PC=%04x I=%04x SP=%01x "
+           "SOUND=%02x DELAY=%02x\n\t"
+           "V0=%02x V1=%02x V2=%02x V3=%02x "
+           "V4=%02x V5=%02x V6=%02x V7=%02x\n\t"
+           "V8=%02x V9=%02x VA=%02x VB=%02x "
+           "VC=%02x VD=%02x VE=%02x VF=%02x\n\n",
+           instruction, state->pc, state->I, state->sp,
+           state->sound_timer, state->delay_timer,
+           state->V[0x0], state->V[0x1], state->V[0x2], state->V[0x3],
+           state->V[0x4], state->V[0x5], state->V[0x6], state->V[0x7],
+           state->V[0x8], state->V[0x9], state->V[0xA], state->V[0xB],
+           state->V[0xC], state->V[0xD], state->V[0xE], state->V[0xF]);
+}
+
+void print_decode_error(int decode_error) {
+    switch(decode_error) {
+        case DECODE_BAD_INSTRUCTION:
+            printf("ERROR: DECODE_BAD_INSTRUCTION\n");
+            break;
+        case ADDRESS_OUT_OF_BOUNDS:
+            printf("ERROR: ADDRESS_OUT_OF_BOUNDS\n");
+            break;
+        case STACK_OVERFLOW:
+            printf("ERROR: STACK_OVERFLOW\n");
+            break;
+        case STACK_EMPTY:
+            printf("ERROR: STACK_EMPTY\n");
+            break;
+        case INVALID_REGISTER:
+            printf("ERROR: INVALID_REGISTER\n");
+            break;
+        case INVALID_KEY:
+            printf("ERROR: INVALID_KEY\n");
+            break;
+        default:
+            printf("ERROR: UNKNOWN_ERROR\n");
+    }
 }
