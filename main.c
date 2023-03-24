@@ -90,21 +90,127 @@ int main(int argc, char *argv[]) {
         if (GET_OP(instruction) == 0xD)
             sdl_draw_buffer(sdl_renderer, state.display);
 
-        nanosleep(&sleep_timespec, NULL);
-
         while (SDL_PollEvent(&e)) {
+            sdl_window_resized = (e.type == SDL_WINDOWEVENT &&
+                                  e.window.event == SDL_WINDOWEVENT_RESIZED);
+            
             if (e.type == SDL_QUIT)
                 sdl_quit = true;
             
-            sdl_window_resized = (e.type == SDL_WINDOWEVENT &&
-                                  e.window.event == SDL_WINDOWEVENT_RESIZED);
-            if (sdl_window_resized) {
+            else if (e.type == SDL_KEYDOWN) {
+                switch(e.key.keysym.sym) {
+                case SDLK_1:
+                    state.keys[0x1] = true;
+                    break;
+                case SDLK_2:
+                    state.keys[0x2] = true;
+                    break;
+                case SDLK_3:
+                    state.keys[0x3] = true;
+                    break;
+                case SDLK_4:
+                    state.keys[0xC] = true;
+                    break;
+                case SDLK_q:
+                    state.keys[0x4] = true;
+                    break;
+                case SDLK_w:
+                    state.keys[0x5] = true;
+                    break;
+                case SDLK_e:
+                    state.keys[0x6] = true;
+                    break;
+                case SDLK_r:
+                    state.keys[0xD] = true;
+                    break;
+                case SDLK_a:
+                    state.keys[0x7] = true;
+                    break;
+                case SDLK_s:
+                    state.keys[0x8] = true;
+                    break;
+                case SDLK_d:
+                    state.keys[0x9] = true;
+                    break;
+                case SDLK_f:
+                    state.keys[0xE] = true;
+                    break;
+                case SDLK_z:
+                    state.keys[0xA] = true;
+                    break;
+                case SDLK_x:
+                    state.keys[0x0] = true;
+                    break;
+                case SDLK_c:
+                    state.keys[0xB] = true;
+                    break;
+                case SDLK_v:
+                    state.keys[0xF] = true;
+                    break;
+                default:
+                    break;
+                }
+            } else if (e.type == SDL_KEYUP) {
+                switch(e.key.keysym.sym) {
+                case SDLK_1:
+                    state.keys[0x1] = false;
+                    break;
+                case SDLK_2:
+                    state.keys[0x2] = false;
+                    break;
+                case SDLK_3:
+                    state.keys[0x3] = false;
+                    break;
+                case SDLK_4:
+                    state.keys[0xC] = false;
+                    break;
+                case SDLK_q:
+                    state.keys[0x4] = false;
+                    break;
+                case SDLK_w:
+                    state.keys[0x5] = false;
+                    break;
+                case SDLK_e:
+                    state.keys[0x6] = false;
+                    break;
+                case SDLK_r:
+                    state.keys[0xD] = false;
+                    break;
+                case SDLK_a:
+                    state.keys[0x7] = false;
+                    break;
+                case SDLK_s:
+                    state.keys[0x8] = false;
+                    break;
+                case SDLK_d:
+                    state.keys[0x9] = false;
+                    break;
+                case SDLK_f:
+                    state.keys[0xE] = false;
+                    break;
+                case SDLK_z:
+                    state.keys[0xA] = false;
+                    break;
+                case SDLK_x:
+                    state.keys[0x0] = false;
+                    break;
+                case SDLK_c:
+                    state.keys[0xB] = false;
+                    break;
+                case SDLK_v:
+                    state.keys[0xF] = false;
+                    break;
+                default:
+                    break;
+                }
+            } else if (sdl_window_resized) {
                 sdl_scale_renderer_to_window(sdl_window, sdl_renderer);
                 sdl_draw_buffer(sdl_renderer, state.display);
                 sdl_window_resized = false;
             }
         }
 
+        nanosleep(&sleep_timespec, NULL);
     } while (instruction && !sdl_quit);
 
     sdl_free_window(sdl_window, sdl_renderer);
