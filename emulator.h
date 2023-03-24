@@ -11,7 +11,6 @@
 
 #define MEMORY_MAX 4096
 #define STACK_MAX 16
-#define REGISTER_MAX 16
 
 #define PC_START 512
 
@@ -21,7 +20,7 @@
 typedef struct emulator {
     int stack[STACK_MAX];
     
-    uint8_t V[REGISTER_MAX];
+    uint8_t V[16];
     uint8_t memory[MEMORY_MAX];
     
     bool keys[16];
