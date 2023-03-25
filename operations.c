@@ -117,7 +117,7 @@ int get_key(Emulator *state, int X) {
     if (X < 0x0 || X > 0xF)
         return INVALID_REGISTER;
     
-    int key = state->V[X];
+    int key = state->V[X] & 0xF;
 
     if (key < 0x0 || key > 0xF)
         return INVALID_KEY;
@@ -295,7 +295,7 @@ int font_character(Emulator *state, int X) {
     if (X < 0x0 || X > 0xF)
         return INVALID_REGISTER;
 
-    state->I = 5 * state->V[X] & 0xF;   
+    state->I = 5 * (state->V[X] & 0xF);   
     return DECODE_SUCCESS;
 }
 

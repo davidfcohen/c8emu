@@ -9,10 +9,32 @@
 #include "emulator.h"
 #include "sdl_wrapper.h"
 
+void handle_keypad_event(Emulator *state, int sdl_scancode, bool is_keydown);
 void print_verbose_output(Emulator *state, uint16_t instruction);
 void print_decode_error(int decode_error);
 
 int main(int argc, char *argv[]) {
+    char *filename;
+    bool verbose = false;
+
+    if (argc < 2) {
+        printf("%s [-v] file\n"
+               "\t-v: Write debug information to stdout.\n", argv[0]);
+        return 0;
+    }
+
+    int i;
+    for (i = 1; i < argc - 1; i++)
+        if (strcmp(argv[i], "-v") == 0)
+            verbose = true;
+    filename = argv[i];
+
+    SDL_Window* sdl_window = NULL;
+    SDL_Renderer* sdl_renderer = NULL;
+    if(!sdl_init_window(&sdl_window, &sdl_renderer)) {
+        return 0;
+    }
+    
     Emulator state = {
         .stack = { 0 },
         .V = { 0 },
@@ -31,39 +53,18 @@ int main(int argc, char *argv[]) {
         .tv_nsec = SLEEP_TIME_NS(FREQUENCY_CPU)
     };
 
-    bool verbose = false;
-
-    if (argc < 2) {
-        printf("%s [-v] file\n"
-               "\t-v: Write debug information to stdout.\n", argv[0]);
-        return 0;
-    }
-
-    int i;
-    for (i = 1; i < argc - 1; i++)
-        if (strcmp(argv[i], "-v") == 0)
-            verbose = true;
-
     load_font(&state);
-    load_rom(&state, argv[i]);
-    
-    SDL_Window* sdl_window = NULL;
-    SDL_Renderer* sdl_renderer = NULL;
-    if(!sdl_init_window(&sdl_window, &sdl_renderer)) {
-        return 0;
-    }
-
-    SDL_Event e;
-    bool sdl_quit = false;
-    bool sdl_window_resized;
+    load_rom(&state, filename);
     
     int decode_error;
 
-    uint16_t prev = 0;
     uint16_t instruction = 0;
+    uint16_t prev = 0;
 
     int delay_timing = (int) round((double) FREQUENCY_CPU / FREQUENCY_TIMER);
     int delay_count = 0;
+
+    bool sdl_quit = false;
 
     do { 
         instruction = fetch(&state);
@@ -71,6 +72,7 @@ int main(int argc, char *argv[]) {
         if (++delay_count == delay_timing) {
             if (state.delay_timer)
                 --state.delay_timer;
+
             if (state.sound_timer)
                 --state.sound_timer;
             delay_count = 0;
@@ -90,123 +92,20 @@ int main(int argc, char *argv[]) {
         if (GET_OP(instruction) == 0xD)
             sdl_draw_buffer(sdl_renderer, state.display);
 
+        SDL_Event e;
         while (SDL_PollEvent(&e)) {
-            sdl_window_resized = (e.type == SDL_WINDOWEVENT &&
-                                  e.window.event == SDL_WINDOWEVENT_RESIZED);
-            
-            if (e.type == SDL_QUIT)
+            if (e.type == SDL_QUIT) {
                 sdl_quit = true;
             
-            else if (e.type == SDL_KEYDOWN) {
-                switch(e.key.keysym.sym) {
-                case SDLK_1:
-                    state.keys[0x1] = true;
-                    break;
-                case SDLK_2:
-                    state.keys[0x2] = true;
-                    break;
-                case SDLK_3:
-                    state.keys[0x3] = true;
-                    break;
-                case SDLK_4:
-                    state.keys[0xC] = true;
-                    break;
-                case SDLK_q:
-                    state.keys[0x4] = true;
-                    break;
-                case SDLK_w:
-                    state.keys[0x5] = true;
-                    break;
-                case SDLK_e:
-                    state.keys[0x6] = true;
-                    break;
-                case SDLK_r:
-                    state.keys[0xD] = true;
-                    break;
-                case SDLK_a:
-                    state.keys[0x7] = true;
-                    break;
-                case SDLK_s:
-                    state.keys[0x8] = true;
-                    break;
-                case SDLK_d:
-                    state.keys[0x9] = true;
-                    break;
-                case SDLK_f:
-                    state.keys[0xE] = true;
-                    break;
-                case SDLK_z:
-                    state.keys[0xA] = true;
-                    break;
-                case SDLK_x:
-                    state.keys[0x0] = true;
-                    break;
-                case SDLK_c:
-                    state.keys[0xB] = true;
-                    break;
-                case SDLK_v:
-                    state.keys[0xF] = true;
-                    break;
-                default:
-                    break;
-                }
+            } else if (e.type == SDL_KEYDOWN) {
+                handle_keypad_event(&state, e.key.keysym.scancode, true);
+            
             } else if (e.type == SDL_KEYUP) {
-                switch(e.key.keysym.sym) {
-                case SDLK_1:
-                    state.keys[0x1] = false;
-                    break;
-                case SDLK_2:
-                    state.keys[0x2] = false;
-                    break;
-                case SDLK_3:
-                    state.keys[0x3] = false;
-                    break;
-                case SDLK_4:
-                    state.keys[0xC] = false;
-                    break;
-                case SDLK_q:
-                    state.keys[0x4] = false;
-                    break;
-                case SDLK_w:
-                    state.keys[0x5] = false;
-                    break;
-                case SDLK_e:
-                    state.keys[0x6] = false;
-                    break;
-                case SDLK_r:
-                    state.keys[0xD] = false;
-                    break;
-                case SDLK_a:
-                    state.keys[0x7] = false;
-                    break;
-                case SDLK_s:
-                    state.keys[0x8] = false;
-                    break;
-                case SDLK_d:
-                    state.keys[0x9] = false;
-                    break;
-                case SDLK_f:
-                    state.keys[0xE] = false;
-                    break;
-                case SDLK_z:
-                    state.keys[0xA] = false;
-                    break;
-                case SDLK_x:
-                    state.keys[0x0] = false;
-                    break;
-                case SDLK_c:
-                    state.keys[0xB] = false;
-                    break;
-                case SDLK_v:
-                    state.keys[0xF] = false;
-                    break;
-                default:
-                    break;
-                }
-            } else if (sdl_window_resized) {
+                handle_keypad_event(&state, e.key.keysym.scancode, false);
+
+            } else if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
                 sdl_scale_renderer_to_window(sdl_window, sdl_renderer);
                 sdl_draw_buffer(sdl_renderer, state.display);
-                sdl_window_resized = false;
             }
         }
 
@@ -216,6 +115,61 @@ int main(int argc, char *argv[]) {
     sdl_free_window(sdl_window, sdl_renderer);
 
     return 0;
+}
+
+void handle_keypad_event(Emulator *state, int sdl_scancode, bool is_keydown) {
+    switch (sdl_scancode) {
+    case SDL_SCANCODE_1:
+        state->keys[0x1] = is_keydown;
+        break;
+    case SDL_SCANCODE_2:
+        state->keys[0x2] = is_keydown;
+        break;
+    case SDL_SCANCODE_3:
+        state->keys[0x3] = is_keydown;
+        break;
+    case SDL_SCANCODE_4:
+        state->keys[0xC] = is_keydown;
+        break;
+    case SDL_SCANCODE_Q:
+        state->keys[0x4] = is_keydown;
+        break;
+    case SDL_SCANCODE_W:
+        state->keys[0x5] = is_keydown;
+        break;
+    case SDL_SCANCODE_E:
+        state->keys[0x6] = is_keydown;
+        break;
+    case SDL_SCANCODE_R:
+        state->keys[0xD] = is_keydown;
+        break;
+    case SDL_SCANCODE_A:
+        state->keys[0x7] = is_keydown;
+        break;
+    case SDL_SCANCODE_S:
+        state->keys[0x8] = is_keydown;
+        break;
+    case SDL_SCANCODE_D:
+        state->keys[0x9] = is_keydown;
+        break;
+    case SDL_SCANCODE_F:
+        state->keys[0xE] = is_keydown;
+        break;
+    case SDL_SCANCODE_Z:
+        state->keys[0xA] = is_keydown;
+        break;
+    case SDL_SCANCODE_X:
+        state->keys[0x0] = is_keydown;
+        break;
+    case SDL_SCANCODE_C:
+        state->keys[0xB] = is_keydown;
+        break;
+    case SDL_SCANCODE_V:
+        state->keys[0xF] = is_keydown;
+        break;
+    default:
+        break;
+    }
 }
 
 void print_verbose_output(Emulator *state, uint16_t instruction) {
