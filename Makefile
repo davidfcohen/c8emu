@@ -6,10 +6,10 @@ LIBS = $(shell $(PKGCONFIG) --libs sdl2)
 
 SRC = main.c sdl_wrapper.c emulator.c decode.c operations.c
 
-all: main
+all: c8emu
 
-main:
-	$(CC) $(SRC) $(CFLAGS) $(INCLUDES) -o main $(LIBS)
+c8emu:
+	$(CC) $(SRC) $(CFLAGS) $(INCLUDES) -o c8emu $(LIBS)
 
 clean:
-	rm -f main
+	rm -f c8emu

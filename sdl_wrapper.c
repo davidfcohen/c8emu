@@ -29,7 +29,7 @@ void sdl_free_window(SDL_Window *sdl_window, SDL_Renderer *sdl_renderer) {
     SDL_Quit();
 }
 
-void sdl_draw_buffer(SDL_Renderer *sdl_renderer, 
+void sdl_draw_buffer(SDL_Renderer *sdl_renderer,
                      bool buffer[DISPLAY_HEIGHT][DISPLAY_WIDTH]) {
     for (int y = 0; y < DISPLAY_HEIGHT; ++y) {
         for (int x = 0; x < DISPLAY_WIDTH; ++x) {
