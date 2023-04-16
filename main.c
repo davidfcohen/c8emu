@@ -113,8 +113,6 @@ int main(int argc, char *argv[]) {
     } while (instruction && !sdl_quit);
 
     sdl_free_window(sdl_window, sdl_renderer);
-
-    return 0;
 }
 
 void handle_keypad_event(Emulator *state, int sdl_scancode, bool is_keydown) {
